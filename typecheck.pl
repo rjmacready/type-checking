@@ -22,8 +22,10 @@ unwrap-env(env(_, A), A).
 init-env(A4) :-
     add-env("print", [function, [integer], [integer]], A1),
     add-env("print", [function, [float], [integer]], A1, A2),
-    add-env("identity", [function, [integer], [integer]], A2, A3), % 
-    add-env("identity", [function, [float], [float]], A3, A4).
+%    add-env("identity", [function, [integer], [integer]], A2, A3), % 
+%    add-env("identity", [function, [float], [float]], A3, A4).
+% HOLY SHIT IM SMART
+    add-env("identity", [function, [A], [A]], A2, A4).
 
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%
