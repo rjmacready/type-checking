@@ -39,9 +39,9 @@ type-of-w-env(_, _, [float, _], float).
 % type-of-w-env(_, _, [int, _], float).
 
 type-of-w-env(_, _, [list, []], list(A)).
-type-of-w-env(Env, _, [list, [Head|[]]], list(A)) :- type-of-w-env(Env, Head, A).
+type-of-w-env(Env, _, [list, [Head]], list(A)) :- type-of-w-env(Env, _, Head, A).
 type-of-w-env(Env, _, [list, [Head|Tail]], list(A)) :-
-    type-of-w-env(Env, Head, A), type-of-w-env(Env, [list, Tail], list(A)).
+    type-of-w-env(Env, _, Head, A), type-of-w-env(Env, _, [list, Tail], list(A)).
 
 type-of-w-env(Env, _, [id, Id], A) :-
     search-env(Id, Env, A).
@@ -49,7 +49,6 @@ type-of-w-env(Env, _, [id, Id], A) :-
 type-of-callable([function|_]).
 args([function, Args, _], Args).
 ret([function, _, Ret], Ret).
-
 
 
 type-of-w-env(Env, _, [application, Target | Args ], A) :-
@@ -67,6 +66,7 @@ type-of-w-env(Env, _, [application, Target | Args ], A) :-
 
     % A is the third member of TypeOfTarget
     ret(TypeOfTarget, A).
+
 
 % Type-check a sequence of expressions
 type-of-seq(Env, _, [OnlyOne], [Type]) :-
@@ -89,12 +89,12 @@ type-of(Stuff, Type) :-
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-test(0, A) :- type-of(_, [list, [[int, 1], [string, 2]]], A).
-test(1, A) :- type-of(_, [list, [[int, 1], [int, 2]]], A).
-test(2, A) :- type-of(_, [list, [[int, 1]]], A).
-test(3, A) :- type-of(_, [int, 1], A).
-test(4, A) :- type-of(_, [float, 1.0], A).
-test(5, A) :- type-of(_, [list, [[int, 1], [float, 2]]], A).
+test(0, A) :- type-of([[list, [[int, 1], [string, 2]]]], A).
+test(1, A) :- type-of([[list, [[int, 1], [int, 2]]]], A).
+test(2, A) :- type-of([[list, [[int, 1]]]], A).
+test(3, A) :- type-of([[int, 1]], A).
+test(4, A) :- type-of([[float, 1.0]], A).
+test(5, A) :- type-of([[list, [[int, 1], [float, 2]]]], A).
 test(6, A) :- type-of([[application, [id, "print"], [int, 1]]], A).
 test(7, A) :- type-of([[application, [id, "print"], [float, 1]]], A).
 test(8, A) :- type-of([[application, [id, "identity"], [int, 1]]], A).
