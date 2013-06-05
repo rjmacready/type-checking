@@ -1,3 +1,6 @@
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Look for types, manipulate env
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % One function may have different signatures! do not stop on the first match!
 % We cant use assocs here, dont allow multiple binds ...
@@ -43,6 +46,8 @@ type_star([type(_)|Rest]) :-
 
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Some aux. Core env.
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 init_env(A5) :-
     add_env(print, function([type(integer)], [type(integer)]), A1),
@@ -54,7 +59,7 @@ init_env(A5) :-
 
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Basis
+% Type Checking
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
