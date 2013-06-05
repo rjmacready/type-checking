@@ -1,22 +1,24 @@
 
-search-env(Key, env(Binds, _), Value) :-
-    get_assoc(Key, Binds, Value).
+% One function may have different signatures! do not stop on the first match!
+% We cant use assocs here, dont allow multiple binds ...
 
-search-env(Key, env(_, Inner), Value) :-
+search-env(Key, env([[Key, Value]|_], _), Value).
+
+search-env(Key, env([_|Rest], Inner), Value) :-
+    search-env(Key, env(Rest, Inner), Value).
+
+search-env(Key, env([], Inner), Value) :-
     search-env(Key, Inner, Value).
 
 
 % This one appends a new bind to the given env
-add-env(Key, Value, env(Binds, Inner), env(NewBinds, Inner)) :-
-    put_assoc(Key, Binds, Value, NewBinds).
+add-env(Key, Value, env(Binds, Inner), env([[Key, Value]|Binds], Inner)).
 
 % This one creates a new env with a key-value
-add-env(Key, Value, env(Binds, nil)) :-
-    empty_assoc(Binds0),
-    put_assoc(Key, Binds0, Value, Binds).
+add-env(Key, Value, env([[Key, Value]], nil)).
 
 
-wrap-env(A, env(E, A)) :- empty_assoc(E).
+wrap-env(A, env([], A)).
 
 unwrap-env(env(_, A), A).
 
@@ -85,13 +87,9 @@ type-of-w-env(Env, Env, [new_var, Var_name, Expr, Cont], T) :-
     last(TypeCont, T).
 
 
-% type-of-w-env(_, _, A, _) :- write("Invalid stuff."), write(A), fail().
 
 % Type-check a sequence of expressions
 type-of-seq(_, _, [], []).
-
-%    type-of-w-env(Env, _, OnlyOne, Type).
-
 type-of-seq(Env, NewEnv, [First|Rest], [TypeH|Type]) :-
     type-of-w-env(Env, NewEnv, First, TypeH),
     type-of-seq(NewEnv, _, Rest, Type).
