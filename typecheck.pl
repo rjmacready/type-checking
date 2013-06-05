@@ -1,16 +1,14 @@
 
+search-env(Key, env([[Key, Value]| _], _), Value). % :- write(found).
 
 search-env(Key, env([], Inner), Value) :-
     search-env(Key, Inner, Value).
-
-search-env(Key, env([[Key, Value]| _], _), Value).
 
 search-env(Key, env([_|Tail], Inner), Value) :- 
     search-env(Key, env(Tail, Inner), Value).
 
 
 add-env(Key, Value, env(Binds, Inner), env([[Key, Value]|Binds], Inner)).
-
 add-env(Key, Value, env([[Key, Value]], [])).
 
 
@@ -33,25 +31,24 @@ init-env(A4) :-
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Type-check of expressions
-type-of-w-env(_, _, [int, _], integer).
-type-of-w-env(_, _, [float, _], float).
+type-of-w-env(Env, Env, [int, _], integer).
+type-of-w-env(Env, Env, [float, _], float).
 % coerce integers to floats, if need be
-% type-of-w-env(_, _, [int, _], float).
+% type-of-w-env(Env, Env, [int, _], float).
 
-type-of-w-env(_, _, [list, []], list(A)).
-type-of-w-env(Env, _, [list, [Head]], list(A)) :- type-of-w-env(Env, _, Head, A).
-type-of-w-env(Env, _, [list, [Head|Tail]], list(A)) :-
-    type-of-w-env(Env, _, Head, A), type-of-w-env(Env, _, [list, Tail], list(A)).
+type-of-w-env(Env, Env, [list, []], list(A)).
+type-of-w-env(Env, Env, [list, [Head]], list(A)) :- type-of-w-env(Env, _, Head, A).
+type-of-w-env(Env, Env, [list, [Head|Tail]], list(A)) :-
+    type-of-w-env(Env, Env, Head, A), type-of-w-env(Env, _, [list, Tail], list(A)).
 
-type-of-w-env(Env, _, [id, Id], A) :-
+type-of-w-env(Env, Env, [id, Id], A) :-
     search-env(Id, Env, A).
 
 type-of-callable([function|_]).
 args([function, Args, _], Args).
 ret([function, _, Ret], Ret).
 
-
-type-of-w-env(Env, _, [application, Target | Args ], A) :-
+type-of-w-env(Env, Env, [application, Target | Args ], A) :-
     % check type of target (callable?)
     type-of-w-env(Env, _, Target, TypeOfTarget),
     type-of-callable(TypeOfTarget),
@@ -68,9 +65,12 @@ type-of-w-env(Env, _, [application, Target | Args ], A) :-
     ret(TypeOfTarget, A).
 
 
+% type-of-w-env(_, _, A, _) :- write("Invalid stuff."), write(A), fail().
+
 % Type-check a sequence of expressions
-type-of-seq(Env, _, [OnlyOne], [Type]) :-
-    type-of-w-env(Env, _, OnlyOne, Type).
+type-of-seq(_, _, [], []).
+
+%    type-of-w-env(Env, _, OnlyOne, Type).
 
 type-of-seq(Env, NewEnv, [First|Rest], [TypeH|Type]) :-
     type-of-w-env(Env, NewEnv, First, TypeH),
