@@ -23,21 +23,35 @@ wrap-env(A, env([], A)).
 unwrap-env(env(_, A), A).
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Our types
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% type(integer).
-% type(float).
-% type(list(type(A))) :- type(A).
-% type(function([], [type(A)])) :- type(A).
+type(integer).
+type(float).
+type(list(type(A))) :-
+    type(A).
+type(function(A, B)) :-
+    type_star(A), type_plus(B).
 
+type_plus([type(_)]).
+type_plus([type(_)|Rest]) :-
+    type_plus(Rest).
+
+type_star([]).
+type_star([type(_)|Rest]) :-
+    list_of_types(Rest).
+
+
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 init-env(A5) :-
-    add-env("print", [function, [integer], [integer]], A1),
-    add-env("print", [function, [float], [integer]], A1, A2),
+%    add-env("print", [function, [integer], [integer]], A1),
+%    add-env("print", [function, [float], [integer]], A1, A2),
 %    add-env("identity", [function, [integer], [integer]], A2, A3), % 
 %    add-env("identity", [function, [float], [float]], A3, A4).
 % HOLY SHIT IM SMART
-    add-env("identity", [function, [A], [A]], A2, A3),
-    add-env("some-fun", [function, [integer], [float]], A3, A4),
+%    add-env("identity", [function, [A], [A]], A2, A3),
+    add-env("some-fun", [function, [integer], [float]], A4), % 3, A4),
     add-env("map", [function, [[function, [A], [B]], list(A)], [list(B)]], A4, A5).
 
 
