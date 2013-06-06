@@ -50,13 +50,14 @@ type_star([type(_)|Rest]) :-
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 init_env(A6) :-
-    add_env(print, t_function([type(t_integer)], [type(t_integer)]), A1),
-    add_env(print, t_function([type(t_float)], [type(t_integer)]), A1, A2),
+    add_env(print, type(t_function([type(t_integer)], [type(t_integer)]) ), A1),
+    add_env(print, type(t_function([type(t_float)], [type(t_integer)]) ), A1, A2),
 % HOLY SHIT IM SMART
-    add_env(identity, t_function([A], [A]), A2, A3),
-    add_env(some_fun, t_function([type(t_integer)], [type(t_float)]), A3, A4),
-    add_env(map, t_function([t_function([A], [B]), type(t_list(A)) ], [type(t_list(B))]) , A4, A5),
-    add_env(car, t_function([type(t_list(H))], [H]), A5, A6).
+    add_env(identity, type(t_function([A], [A])), A2, A3),
+    add_env(some_fun, type(t_function([type(t_integer)], [type(t_float)])), A3, A4),
+    add_env(map, type(t_function([type(t_function([A], [B])), 
+				  type(t_list(A)) ], [type(t_list(B))]) ), A4, A5),
+    add_env(car, type(t_function([type(t_list(H))], [H])), A5, A6).
 
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -64,9 +65,9 @@ init_env(A6) :-
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-type_of_callable(t_function(_, _)).
-fun_args(t_function(Args, _), Args).
-fun_ret(t_function(_, Ret), Ret).
+type_of_callable(type(t_function(_, _))).
+fun_args(type(t_function(Args, _)), Args).
+fun_ret(type(t_function(_, Ret)), Ret).
 
 % Type-check of expressions
 
@@ -85,9 +86,11 @@ type_of_w_env(Env, Env, id(Id), A) :-
     search_env(Id, Env, A).
 
 % Function application
-type_of_w_env(Env, Env, app( [Target | Args] ), A) :-
+type_of_w_env(Env, Env, app( [ Target | Args ] ), A) :-
+
     % check type of target (callable?)
     type_of_w_env(Env, _, Target, TypeOfTarget),
+
     type_of_callable(TypeOfTarget),
 
     % check type of args with whats in TypeOfTarget
@@ -114,14 +117,14 @@ type_of_w_env(Env, Env, lambda([var(Type, Var_name)], Cont), T) :-
     add_env(Var_name, Type, Wenv, NewEnv),
     type_of_seq(NewEnv, _, Cont, TypeCont),
     last(TypeCont, ReturnType),
-    T = t_function([Type], [ReturnType]).
+    T = type(t_function([Type], [ReturnType])).
 
 type_of_w_env(Env, Env, lambda([var(Var_name)], Cont), T) :-
     wrap_env(Env, Wenv),
     add_env(Var_name, type(A), Wenv, NewEnv),
     type_of_seq(NewEnv, _, Cont, TypeCont),
     last(TypeCont, ReturnType),
-    T = t_function([type(A)], [ReturnType]).
+    T = type(t_function([type(A)], [ReturnType])).
 
 
 % Type-check a sequence of expressions
@@ -153,9 +156,9 @@ test( 6, A)  :- type_of( [app([id(print), int(1)])], A).
 test( 7, A)  :- type_of( [app([id(print), float(1)])], A).
 test( 8, A)  :- type_of( [app([id(identity), int(1)])], A).
 test( 9, A)  :- type_of( [app([id(identity), float(1)])], A).
-test(10, A)  :- type_of( [new_var( a, [int, 1], [[id, a]])], A).
-test(11, A)  :- type_of( [app([[id, map], [id, some_fun], list([[int, 1]])]) ], A).
-test(12, A)  :- type_of( [lambda( [var(a)], [[application, [id, print] , [id, a] ]])], A).
-test(13, A)  :- type_of( [lambda( [var(type(t_integer), a)], [[id, a]])], A).
-test(14, A)  :- type_of( [lambda( [var(a)], [[id, a]])], A).
-%test(15, A) :- type_of( [lambda( [var(a)], [[id, a]])], A).
+test(10, A)  :- type_of( [new_var( a, int(1), [id(a)])], A).
+test(11, A)  :- type_of( [app([id(map), id(some_fun), list([int(1)])]) ], A).
+test(12, A)  :- type_of( [lambda( [var(a)], [app( [id(print), id(a)] )])], A).
+test(13, A)  :- type_of( [lambda( [var(type(t_integer), a)], [id(a)])], A).
+test(14, A)  :- type_of( [lambda( [var(a)], [id(a)])], A).
+%test(15, A) :- type_of( [lambda( [var(a)], [id(a)])], A).
