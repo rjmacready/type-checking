@@ -109,15 +109,14 @@ type_of_w_env(Env, Env, [new_var, Var_name, Expr, Cont], T) :-
     type_of_seq(NewEnv, _, Cont, TypeCont),
     last(TypeCont, T).
 
-
-type_of_w_env(Env, Env, [lambda, [[Type, Var_name]], Cont], T) :-
+type_of_w_env(Env, Env, lambda([var(Type, Var_name)], Cont), T) :-
     wrap_env(Env, Wenv),
     add_env(Var_name, Type, Wenv, NewEnv),
     type_of_seq(NewEnv, _, Cont, TypeCont),
     last(TypeCont, ReturnType),
     T = function([Type], [ReturnType]).
 
-type_of_w_env(Env, Env, [lambda, [Var_name], Cont], T) :-
+type_of_w_env(Env, Env, lambda([var(Var_name)], Cont), T) :-
     wrap_env(Env, Wenv),
     add_env(Var_name, type(A), Wenv, NewEnv),
     type_of_seq(NewEnv, _, Cont, TypeCont),
@@ -156,7 +155,7 @@ test( 8, A) :- type_of([[application, [id, identity], [int, 1]]], A).
 test( 9, A) :- type_of([[application, [id, identity], [float, 1]]], A).
 test(10, A) :- type_of([[new_var, a, [int, 1], [[id, a]]]], A).
 test(11, A) :- type_of([ [application, [id, map], [id, some_fun], [list, [[int, 1]]]] ], A).
-test(12, A) :- type_of([[lambda, [a], [[application, [id, print] , [id, a] ]]]], A).
-test(13, A) :- type_of([[lambda, [[type(integer), a]], [[id, a]]]], A).
-test(14, A) :- type_of([[lambda, [a], [[id, a]]]], A).
-test(15, A) :- type_of([[lambda, [a], [[id, a]]]], A).
+test(12, A) :- type_of( [lambda( [var(a)], [[application, [id, print] , [id, a] ]])], A).
+test(13, A) :- type_of( [lambda( [var(type(integer), a)], [[id, a]])], A).
+test(14, A) :- type_of( [lambda( [var(a)], [[id, a]])], A).
+%test(15, A) :- type_of([lambda( [var(a)], [[id, a]])], A).
