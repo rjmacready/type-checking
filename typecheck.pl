@@ -49,13 +49,14 @@ type_star([type(_)|Rest]) :-
 % Some aux. Core env.
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-init_env(A5) :-
+init_env(A6) :-
     add_env(print, function([type(integer)], [type(integer)]), A1),
     add_env(print, function([type(float)], [type(integer)]), A1, A2),
 % HOLY SHIT IM SMART
     add_env(identity, function([A], [A]), A2, A3),
     add_env(some_fun, function([type(integer)], [type(float)]), A3, A4),
-    add_env(map, function([function([A], [B]), type(list(A)) ], [type(list(B))]) , A4, A5).
+    add_env(map, function([function([A], [B]), type(list(A)) ], [type(list(B))]) , A4, A5),
+    add_env(car, function([type(list(H))], [H]), A5, A6).
 
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -66,7 +67,6 @@ init_env(A5) :-
 type_of_callable(function(_, _)).
 fun_args(function(Args, _), Args).
 fun_ret(function(_, Ret), Ret).
-
 
 % Type-check of expressions
 
@@ -101,13 +101,28 @@ type_of_w_env(Env, Env, [application, Target | Args ], A) :-
     % A is the third member of TypeOfTarget
     fun_ret(TypeOfTarget, A).
 
-% Assignment - for lambdas ...
+% Assignment - for lambdas, lets ...
 type_of_w_env(Env, Env, [new_var, Var_name, Expr, Cont], T) :-
     type_of_w_env(Env, _, Expr, TypeExpr),
     wrap_env(Env, Wenv),
     add_env(Var_name, TypeExpr, Wenv, NewEnv),
     type_of_seq(NewEnv, _, Cont, TypeCont),
     last(TypeCont, T).
+
+
+type_of_w_env(Env, Env, [lambda, [[Type, Var_name]], Cont], T) :-
+    wrap_env(Env, Wenv),
+    add_env(Var_name, Type, Wenv, NewEnv),
+    type_of_seq(NewEnv, _, Cont, TypeCont),
+    last(TypeCont, ReturnType),
+    T = function([Type], [ReturnType]).
+
+type_of_w_env(Env, Env, [lambda, [Var_name], Cont], T) :-
+    wrap_env(Env, Wenv),
+    add_env(Var_name, type(A), Wenv, NewEnv),
+    type_of_seq(NewEnv, _, Cont, TypeCont),
+    last(TypeCont, ReturnType),
+    T = function([type(A)], [ReturnType]).
 
 
 % Type-check a sequence of expressions
@@ -141,4 +156,7 @@ test( 8, A) :- type_of([[application, [id, identity], [int, 1]]], A).
 test( 9, A) :- type_of([[application, [id, identity], [float, 1]]], A).
 test(10, A) :- type_of([[new_var, a, [int, 1], [[id, a]]]], A).
 test(11, A) :- type_of([ [application, [id, map], [id, some_fun], [list, [[int, 1]]]] ], A).
-
+test(12, A) :- type_of([[lambda, [a], [[application, [id, print] , [id, a] ]]]], A).
+test(13, A) :- type_of([[lambda, [[type(integer), a]], [[id, a]]]], A).
+test(14, A) :- type_of([[lambda, [a], [[id, a]]]], A).
+test(15, A) :- type_of([[lambda, [a], [[id, a]]]], A).
