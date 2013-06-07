@@ -33,8 +33,8 @@ type(t_integer).
 type(t_float).
 type(t_list(type(A))) :-
     type(A).
-type(t_function(A, B)) :-
-    type_star(A), type_plus(B).
+type(t_function(A, type(_))) :-
+    type_star(A).
 
 type_plus([type(_)]).
 type_plus([type(_)|Rest]) :-
@@ -50,14 +50,14 @@ type_star([type(_)|Rest]) :-
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 init_env(A6) :-
-    add_env(print, type(t_function([type(t_integer)], [type(t_integer)]) ), A1),
-    add_env(print, type(t_function([type(t_float)], [type(t_integer)]) ), A1, A2),
+    add_env(print, type(t_function([type(t_integer)], type(t_integer) ) ), A1),
+    add_env(print, type(t_function([type(t_float)], type(t_integer) ) ), A1, A2),
 % HOLY SHIT IM SMART
-    add_env(identity, type(t_function([A], [A])), A2, A3),
-    add_env(some_fun, type(t_function([type(t_integer)], [type(t_float)])), A3, A4),
-    add_env(map, type(t_function([type(t_function([A], [B])), 
-				  type(t_list(A)) ], [type(t_list(B))]) ), A4, A5),
-    add_env(car, type(t_function([type(t_list(H))], [H])), A5, A6).
+    add_env(identity, type(t_function([A], A)), A2, A3),
+    add_env(some_fun, type(t_function([type(t_integer)], type(t_float) )), A3, A4),
+    add_env(map, type(t_function([type(t_function([A], B)), 
+				  type(t_list(A)) ], type(t_list(B)) ) ), A4, A5),
+    add_env(car, type(t_function([type(t_list(H))], H)), A5, A6).
 
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -117,14 +117,14 @@ type_of_w_env(Env, Env, lambda([var(Type, Var_name)], Cont), T) :-
     add_env(Var_name, Type, Wenv, NewEnv),
     type_of_seq(NewEnv, _, Cont, TypeCont),
     last(TypeCont, ReturnType),
-    T = type(t_function([Type], [ReturnType])).
+    T = type(t_function([Type], ReturnType)).
 
 type_of_w_env(Env, Env, lambda([var(Var_name)], Cont), T) :-
     wrap_env(Env, Wenv),
     add_env(Var_name, type(A), Wenv, NewEnv),
     type_of_seq(NewEnv, _, Cont, TypeCont),
     last(TypeCont, ReturnType),
-    T = type(t_function([type(A)], [ReturnType])).
+    T = type(t_function([type(A)], ReturnType)).
 
 
 % Type-check a sequence of expressions
@@ -161,4 +161,5 @@ test(11, A)  :- type_of( [app([id(map), id(some_fun), list([int(1)])]) ], A).
 test(12, A)  :- type_of( [lambda( [var(a)], [app( [id(print), id(a)] )])], A).
 test(13, A)  :- type_of( [lambda( [var(type(t_integer), a)], [id(a)])], A).
 test(14, A)  :- type_of( [lambda( [var(a)], [id(a)])], A).
-%test(15, A) :- type_of( [lambda( [var(a)], [id(a)])], A).
+test(15, A)  :- type_of( [app([lambda([var(a)], [id(a)]) , int(1)])], A).
+test(16, A)  :- type_of( [app([id(identity), id(print)])], A).
