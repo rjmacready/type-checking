@@ -27,7 +27,7 @@ unwrap_env(env(_, A), A).
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Our types
- %%%%%%%%%%%%%%%%%%%%%%%%%%%
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 type(t_integer).
 type(t_float).
@@ -84,6 +84,9 @@ type_of_w_env(Env, Env, list([Head|Tail]), type(t_list(A)) ) :-
 % Search the env
 type_of_w_env(Env, Env, id(Id), A) :-
     search_env(Id, Env, A).
+
+type_of_w_env(Env, Env, cast_to(A, T), T) :-
+    type_of_w_env(Env, Env, A, T).
 
 % Function application
 type_of_w_env(Env, Env, app( [ Target | Args ] ), A) :-
@@ -145,12 +148,13 @@ type_of(Stuff, Type) :-
 % Some tests
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-
+% will fail
 test( 0, A)  :- type_of( [list( [int(1), string(2)])], A).
 test( 1, A)  :- type_of( [list( [int(1), int(2)])], A).
 test( 2, A)  :- type_of( [list( [int(1)])], A).
 test( 3, A)  :- type_of( [int(1)], A).
 test( 4, A)  :- type_of( [float(1.0)], A).
+% will fail
 test( 5, A)  :- type_of( [list( [int(1), float(2)])], A).
 test( 6, A)  :- type_of( [app([id(print), int(1)])], A).
 test( 7, A)  :- type_of( [app([id(print), float(1)])], A).
@@ -163,3 +167,20 @@ test(13, A)  :- type_of( [lambda( [var(type(t_integer), a)], [id(a)])], A).
 test(14, A)  :- type_of( [lambda( [var(a)], [id(a)])], A).
 test(15, A)  :- type_of( [app([lambda([var(a)], [id(a)]) , int(1)])], A).
 test(16, A)  :- type_of( [app([id(identity), id(print)])], A).
+test(17, A)  :- 
+    init_env(E), 
+    type_of_w_env(E, E, 
+		  cast_to(id(print), 
+			  type(t_function([type(t_integer)], type(t_integer)))), A).
+test(18, A)  :-
+    init_env(E), 
+    type_of_w_env(E, E, 
+		  cast_to(id(identity), 
+			  type(t_function([type(integer)], type(integer)))), A).
+
+% will fail
+test(19, A)  :-
+    init_env(E), 
+    type_of_w_env(E, E, 
+		  cast_to(id(identity), 
+			  type(t_function([type(float)], type(integer)))), A).
