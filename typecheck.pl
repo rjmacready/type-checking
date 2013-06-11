@@ -105,15 +105,8 @@ type_of_w_env(Env, Env, app( [ Target | Args ] ), A) :-
 
     % check type of args with whats in TypeOfTarget
 
-%    fun_arg(TypeOfTarget, TypeOfTargetArgs),
     type_of_seq(Env, _, Args, TypeOfArgs),
-    %maplist(=, TypeOfTargetArgs, TypeOfArgs),
-    % (...)
     type_of_app(TypeOfTarget, TypeOfArgs, A).
-
-    % A is the third member of TypeOfTarget
-
-    %fun_ret(TypeOfTarget, A).
 
 % Assignment - for lambdas, lets ...
 type_of_w_env(Env, Env, new_var(Var_name, Expr, Cont), T) :-
