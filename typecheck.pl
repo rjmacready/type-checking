@@ -102,19 +102,18 @@ type_of_w_env(Env, Env, cast_to(A, T), T) :-
 type_of_w_env(Env, Env, app( [ Target | Args ] ), A) :-
 
     % check type of target (callable?)
-    type_of_w_env(Env, _, Target, TypeOfTarget),
 
+    type_of_w_env(Env, _, Target, TypeOfTarget),
     type_of_callable(TypeOfTarget),
 
     % check type of args with whats in TypeOfTarget
+
     fun_args(TypeOfTarget, TypeOfTargetArgs),
-
     type_of_seq(Env, _, Args, TypeOfArgs),
-
-    % match(TypeOfArgs, _),
     maplist(=, TypeOfTargetArgs, TypeOfArgs),
 
     % A is the third member of TypeOfTarget
+
     fun_ret(TypeOfTarget, A).
 
 % Assignment - for lambdas, lets ...
