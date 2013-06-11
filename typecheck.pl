@@ -33,19 +33,12 @@ type(t_integer).
 type(t_float).
 type(t_list(type(A))) :-
     type(A).
-type(t_function(A, type(_))) :-
-    type_star(A).
+type(t_function(type(A), type(B))) :-
+    type(A), type(B).
 
 type(t_maybe(type(A))) :-
     type(A).
 
-type_plus([type(_)]).
-type_plus([type(_)|Rest]) :-
-    type_plus(Rest).
-
-type_star([]).
-type_star([type(_)|Rest]) :-
-    list_of_types(Rest).
 
 is_type(type(A)) :- 
     type(A).
@@ -56,14 +49,14 @@ is_type(type(A)) :-
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 init_env(A6) :-
-    add_env(print, type(t_function([type(t_integer)], type(t_integer) ) ), A1),
-    add_env(print, type(t_function([type(t_float)], type(t_integer) ) ), A1, A2),
+    add_env(print, type(t_function(type(t_integer), type(t_integer) ) ), A1),
+    add_env(print, type(t_function(type(t_float), type(t_integer) ) ), A1, A2),
 % HOLY SHIT IM SMART
-    add_env(identity, type(t_function([A], A)), A2, A3),
-    add_env(some_fun, type(t_function([type(t_integer)], type(t_float) )), A3, A4),
-    add_env(map, type(t_function([type(t_function([A], B)), 
-				  type(t_list(A)) ], type(t_list(B)) ) ), A4, A5),
-    add_env(car, type(t_function([type(t_list(H))], H)), A5, A6).
+    add_env(identity, type(t_function(A, A)), A2, A3),
+    add_env(some_fun, type(t_function(type(t_integer), type(t_float) )), A3, A4),
+    add_env(map, type(t_function(type(t_function(A, B)), 
+		      type(t_function(type(t_list(A)) , type(t_list(B)))) ) ), A4, A5),
+    add_env(car, type(t_function(type(t_list(H)), H)), A5, A6).
 
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -72,8 +65,12 @@ init_env(A6) :-
 
 
 type_of_callable(type(t_function(_, _))).
-fun_args(type(t_function(Args, _)), Args).
+fun_arg(type(t_function(Arg, _)), Arg).
 fun_ret(type(t_function(_, Ret)), Ret).
+
+type_of_app(T, [], T).
+type_of_app(type(t_function(Arg, Ret)), [Arg|Rest], T) :-
+    type_of_app(Ret, Rest, T).
 
 % Type-check of expressions
 
@@ -108,13 +105,15 @@ type_of_w_env(Env, Env, app( [ Target | Args ] ), A) :-
 
     % check type of args with whats in TypeOfTarget
 
-    fun_args(TypeOfTarget, TypeOfTargetArgs),
+%    fun_arg(TypeOfTarget, TypeOfTargetArgs),
     type_of_seq(Env, _, Args, TypeOfArgs),
-    maplist(=, TypeOfTargetArgs, TypeOfArgs),
+    %maplist(=, TypeOfTargetArgs, TypeOfArgs),
+    % (...)
+    type_of_app(TypeOfTarget, TypeOfArgs, A).
 
     % A is the third member of TypeOfTarget
 
-    fun_ret(TypeOfTarget, A).
+    %fun_ret(TypeOfTarget, A).
 
 % Assignment - for lambdas, lets ...
 type_of_w_env(Env, Env, new_var(Var_name, Expr, Cont), T) :-
@@ -129,14 +128,14 @@ type_of_w_env(Env, Env, lambda([var(Type, Var_name)], Cont), T) :-
     add_env(Var_name, Type, Wenv, NewEnv),
     type_of_seq(NewEnv, _, Cont, TypeCont),
     last(TypeCont, ReturnType),
-    T = type(t_function([Type], ReturnType)).
+    T = type(t_function(Type, ReturnType)).
 
 type_of_w_env(Env, Env, lambda([var(Var_name)], Cont), T) :-
     wrap_env(Env, Wenv),
     add_env(Var_name, type(A), Wenv, NewEnv),
     type_of_seq(NewEnv, _, Cont, TypeCont),
     last(TypeCont, ReturnType),
-    T = type(t_function([type(A)], ReturnType)).
+    T = type(t_function(type(A), ReturnType)).
 
 
 % Type-check a sequence of expressions
@@ -180,19 +179,19 @@ test(17, A)  :-
     init_env(E), 
     type_of_w_env(E, E, 
 		  cast_to(id(print), 
-			  type(t_function([type(t_integer)], type(t_integer)))), A).
+			  type(t_function(type(t_integer), type(t_integer)))), A).
 test(18, A)  :-
     init_env(E), 
     type_of_w_env(E, E, 
 		  cast_to(id(identity), 
-			  type(t_function([type(t_integer)], type(t_integer)))), A).
+			  type(t_function(type(t_integer), type(t_integer)))), A).
 
 % will fail
 test(19, A)  :-
     init_env(E), 
     type_of_w_env(E, E, 
 		  cast_to(id(identity), 
-			  type(t_function([type(t_float)], type(t_integer)))), A).
+			  type(t_function(type(t_float), type(t_integer)))), A).
 
 
 test(20, T)  :-
