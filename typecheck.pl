@@ -36,6 +36,9 @@ type(t_list(type(A))) :-
 type(t_function(A, type(_))) :-
     type_star(A).
 
+type(t_maybe(type(A))) :-
+    type(A).
+
 type_plus([type(_)]).
 type_plus([type(_)|Rest]) :-
     type_plus(Rest).
@@ -43,6 +46,9 @@ type_plus([type(_)|Rest]) :-
 type_star([]).
 type_star([type(_)|Rest]) :-
     list_of_types(Rest).
+
+is_type(type(A)) :- 
+    type(A).
 
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -70,6 +76,10 @@ fun_args(type(t_function(Args, _)), Args).
 fun_ret(type(t_function(_, Ret)), Ret).
 
 % Type-check of expressions
+
+% maybe
+type_of_w_env(Env, Env, nothing, type(t_maybe(type(_)))).
+type_of_w_env(Env, Env, just(Exp), type(t_maybe(type(A)))) :- type_of_w_env(Env, Env, Exp, type(A)).
 
 % Scalars
 type_of_w_env(Env, Env, int(_), type(t_integer) ).
@@ -176,11 +186,21 @@ test(18, A)  :-
     init_env(E), 
     type_of_w_env(E, E, 
 		  cast_to(id(identity), 
-			  type(t_function([type(integer)], type(integer)))), A).
+			  type(t_function([type(t_integer)], type(t_integer)))), A).
 
 % will fail
 test(19, A)  :-
     init_env(E), 
     type_of_w_env(E, E, 
 		  cast_to(id(identity), 
-			  type(t_function([type(float)], type(integer)))), A).
+			  type(t_function([type(t_float)], type(t_integer)))), A).
+
+
+test(20, T)  :-
+    init_env(Env), type_of_w_env(Env, Env, nothing, T).
+
+test(21, T)  :-
+    init_env(Env), type_of_w_env(Env, Env, cast_to(nothing, type(t_maybe(type(t_integer)))), T).
+
+test(22, T)  :-
+    init_env(Env), type_of_w_env(Env, Env, just(int(1)), T).
